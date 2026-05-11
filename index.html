@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOL待機列 予想計算ツール🐾</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+  :root {
+    --bg: #f3f0fa;
+    --surface: #ffffff;
+    --surface2: #f0ecf8;
+    --border: #ddd6f0;
+    --accent: #9b7fe8;
+    --accent2: #f472b6;
+    --accent3: #7dd3c0;
+    --text: #2d2459;
+    --text2: #9b93bb;
+    --fast: #34c9a0;
+    --normal: #9b7fe8;
+    --slow: #f472b6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .header h1 span {
+    color: var(--accent);
+  }
+
+  .header p {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .my-turn-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .my-turn-input input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 24px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .my-turn-input input:focus {
+    border-color: var(--accent);
+  }
+
+  .my-turn-input .label {
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  .records-header {
+    display: grid;
+    grid-template-columns: 90px 1fr 32px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+
+  .records-header span {
+    font-size: 11px;
+    color: var(--text2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .record-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 32px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .record-row input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 10px;
+    font-size: 15px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .record-row input:focus {
+    border-color: var(--accent);
+  }
+
+  .record-row input::placeholder {
+    color: var(--text2);
+    font-size: 13px;
+  }
+
+  .del-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-size: 16px;
+    width: 32px;
+    height: 38px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .del-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .add-btn {
+    width: 100%;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-size: 13px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+
+  .add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .calc-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .calc-btn:hover {
+    background: #8a6fd8;
+    transform: translateY(-1px);
+  }
+
+  .calc-btn:active {
+    transform: translateY(0);
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .result-card.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .speed-display {
+    text-align: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .speed-display .speed-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .speed-display .speed-label {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  .time-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .time-row {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border-left: 3px solid transparent;
+    gap: 4px;
+  }
+
+  .time-row.fast { border-left-color: var(--fast); }
+  .time-row.normal { border-left-color: var(--normal); }
+  .time-row.slow { border-left-color: var(--slow); }
+
+  .time-row .label {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .time-row .label strong {
+    display: block;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+
+  .time-row.fast .label strong { color: var(--fast); }
+  .time-row.normal .label strong { color: var(--normal); }
+  .time-row.slow .label strong { color: var(--slow); }
+
+  .time-row .time-remaining-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .time-row .time {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+  }
+
+  .time-row.fast .time { color: var(--fast); }
+  .time-row.normal .time { color: var(--normal); }
+  .time-row.slow .time { color: var(--slow); }
+
+  .time-row .remaining {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .error-msg {
+    background: rgba(244, 114, 182, 0.1);
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    display: none;
+    white-space: pre-line;
+    line-height: 1.8;
+  }
+
+  .error-msg.show { display: block; }
+
+  .data-points-info {
+    font-size: 11px;
+    color: var(--text2);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .deleted-notice {
+    font-size: 11px;
+    color: var(--accent3);
+    text-align: center;
+    padding: 4px;
+    display: none;
+  }
+
+  .deleted-notice.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NOL <span>待機列</span> 予想ツール🐾</h1>
+  <p>時刻と待機人数を記録して入場時間を予測</p>
+</div>
+
+<!-- 自分の順番は非表示（内部的には待機人数の記録から自動取得） -->
+
+<!-- 記録入力 -->
+<div class="card">
+  <div class="card-title">待機人数の記録（時刻と人数を入力）</div>
+  <div class="records-header">
+    <span>時刻 (hhmm)</span>
+    <span>待機人数</span>
+    <span></span>
+  </div>
+  <div id="recordsList"></div>
+  <button class="add-btn" onclick="addRow()">＋ 行を追加</button>
+  <div class="deleted-notice" id="deletedNotice">古いデータを自動削除して再計算しました</div>
+  <div class="data-points-info" id="dataPointsInfo"></div>
+</div>
+
+<!-- エラー -->
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- 計算ボタン -->
+<button class="calc-btn" onclick="calculate()">🔄 再計算する</button>
+
+<!-- 結果 -->
+<div class="result-card" id="resultCard">
+  <div class="card-title">計算結果</div>
+  <div class="speed-display">
+    <div class="speed-num" id="speedNum">—</div>
+    <div class="speed-label">1分あたりの平均進み人数</div>
+  </div>
+  <div class="time-rows">
+    <div class="time-row fast">
+      <div class="label">
+        早い場合
+        <strong id="fastRate"></strong>
+      </div>
+      <div class="time-remaining-row">
+        <div class="time" id="fastTime">—</div>
+        <div class="remaining" id="fastRemaining"></div>
+      </div>
+    </div>
+    <div class="time-row normal">
+      <div class="label">
+        単純計算
+        <strong id="normalRate"></strong>
+      </div>
+      <div class="time-remaining-row">
+        <div class="time" id="normalTime">—</div>
+        <div class="remaining" id="normalRemaining"></div>
+      </div>
+    </div>
+    <div class="time-row slow">
+      <div class="label">
+        遅い場合
+        <strong id="slowRate"></strong>
+      </div>
+      <div class="time-remaining-row">
+        <div class="time" id="slowTime">—</div>
+        <div class="remaining" id="slowRemaining"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let rowCount = 0;
+
+  function addRow(time = '', people = '') {
+    rowCount++;
+    const id = rowCount;
+    const div = document.createElement('div');
+    div.className = 'record-row';
+    div.id = `row-${id}`;
+    div.innerHTML = `
+      <input type="text" id="time-${id}" placeholder="2205" maxlength="4" value="${time}"
+        oninput="autoFormatTime(this)" inputmode="numeric">
+      <input type="number" id="people-${id}" placeholder="30493" min="0" value="${people}">
+      <button class="del-btn" onclick="removeRow(${id})">×</button>
+    `;
+    document.getElementById('recordsList').appendChild(div);
+    updateDataPointsInfo();
+  }
+
+  function removeRow(id) {
+    const el = document.getElementById(`row-${id}`);
+    if (el) el.remove();
+    updateDataPointsInfo();
+  }
+
+  function autoFormatTime(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+  }
+
+  function updateDataPointsInfo() {
+    const rows = document.querySelectorAll('.record-row');
+    const info = document.getElementById('dataPointsInfo');
+    info.textContent = rows.length > 0 ? `現在 ${rows.length} 件の記録` : '';
+  }
+
+  function parseTime(hhmm) {
+    const s = hhmm.trim().padStart(4, '0');
+    const h = parseInt(s.slice(0, 2));
+    const m = parseInt(s.slice(2, 4));
+    if (isNaN(h) || isNaN(m) || h > 23 || m > 59) return null;
+    return h * 60 + m;
+  }
+
+  function minutesToHHMM(totalMinutes) {
+    // 日をまたぐ対応・小数を整数に丸める
+    totalMinutes = Math.floor(((totalMinutes % 1440) + 1440) % 1440);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function formatRemaining(minutes) {
+    const totalMins = Math.floor(minutes);
+    if (totalMins < 60) return `約${totalMins}分後`;
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `約${h}時間${m > 0 ? m + '分' : ''}後`;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+    document.getElementById('resultCard').classList.remove('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').classList.remove('show');
+  }
+
+  function calculate() {
+    hideError();
+    document.getElementById('deletedNotice').classList.remove('show');
+
+    // 全行のデータを収集
+    const rows = document.querySelectorAll('.record-row');
+    const records = [];
+
+    rows.forEach(row => {
+      const id = row.id.replace('row-', '');
+      const timeVal = document.getElementById(`time-${id}`)?.value.trim();
+      const peopleVal = document.getElementById(`people-${id}`)?.value.trim();
+      if (!timeVal || !peopleVal) return;
+      const t = parseTime(timeVal);
+      const p = parseInt(peopleVal);
+      if (t === null || isNaN(p) || p < 0) return;
+      records.push({ t, p, timeVal, peopleVal, id });
+    });
+
+    if (records.length < 2) {
+      showError('2件以上の記録を入力してください。');
+      return;
+    }
+
+    // ✅ チェック①：補正前の生データで時刻逆転を検出（日またぎ除く）
+    const warnings = [];
+    for (let i = 1; i < records.length; i++) {
+      const dt = records[i].t - records[i-1].t;
+      // マイナスで600分以内＝入力ミスの可能性（600分超は日またぎ）
+      if (dt < 0 && Math.abs(dt) <= 600) {
+        warnings.push(`⚠️ ${records[i-1].timeVal}→${records[i].timeVal}：時刻をお確かめください`);
+      }
+    }
+
+    // 日またぎ補正（前の行より時刻が小さければ翌日として+1440）
+    for (let i = 1; i < records.length; i++) {
+      if (records[i].t < records[i-1].t) {
+        records[i].t += 1440;
+      }
+    }
+
+    // 補正後にソート
+    records.sort((a, b) => a.t - b.t);
+
+    // ✅ チェック②：人数が増えているチェック（ソート後・独立して判定）
+    const errors_people = [];
+    for (let i = 1; i < records.length; i++) {
+      const dp = records[i-1].p - records[i].p;
+      if (dp < 0) {
+        errors_people.push(`❌ ${records[i-1].timeVal}→${records[i].timeVal}：待機人数が増えています（${records[i-1].p}人→${records[i].p}人）`);
+      }
+    }
+
+    // 人数エラーがあれば停止（警告も一緒に表示）
+    if (errors_people.length > 0) {
+      showError([...warnings, ...errors_people].join('\n'));
+      return;
+    }
+
+    // 警告のみの場合は表示しつつ計算続行
+    if (warnings.length > 0) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = warnings.join('\n');
+      el.classList.add('show');
+      el.style.background = 'rgba(155, 127, 232, 0.1)';
+      el.style.borderColor = 'rgba(155, 127, 232, 0.3)';
+      el.style.color = 'var(--accent)';
+    }
+
+    // 各区間の1分あたりの減少人数を計算
+    const speeds = [];
+    for (let i = 1; i < records.length; i++) {
+      const dt = records[i].t - records[i-1].t;
+      const dp = records[i-1].p - records[i].p;
+      if (dt > 0 && dp >= 0) {
+        speeds.push(dp / dt);
+      }
+    }
+
+    if (speeds.length === 0) {
+      showError('有効なデータが不足しています。時刻と人数を確認してください。');
+      return;
+    }
+
+    // 平均速度
+    const avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
+
+    if (avgSpeed <= 0) {
+      showError('待機人数が減っていません。データを確認してください。');
+      return;
+    }
+
+    // 古いデータを削除（外れ値チェック）
+    if (records.length > 3) {
+      const mean = avgSpeed;
+      const variance = speeds.reduce((a, s) => a + Math.pow(s - mean, 2), 0) / speeds.length;
+      const std = Math.sqrt(variance);
+      const oldestSpeed = speeds[0];
+      if (Math.abs(oldestSpeed - mean) > 2 * std) {
+        removeRow(records[0].id);
+        document.getElementById('deletedNotice').classList.add('show');
+        calculate();
+        return;
+      }
+    }
+
+    // 最新の記録から予想（最新の待機人数 = 残り人数）
+    const latestRecord = records[records.length - 1];
+    const baseMinutes = latestRecord.t;
+    const remaining = latestRecord.p;
+
+    // 速度バリエーション（±10人）
+    const fastSpeed = avgSpeed + 10;
+    const slowSpeed = Math.max(avgSpeed - 10, 1);
+
+    const fastMinutes = remaining / fastSpeed;
+    const normalMinutes = remaining / avgSpeed;
+    const slowMinutes = remaining / slowSpeed;
+
+    const fastArrival = minutesToHHMM(baseMinutes + fastMinutes);
+    const normalArrival = minutesToHHMM(baseMinutes + normalMinutes);
+    const slowArrival = minutesToHHMM(baseMinutes + slowMinutes);
+
+    document.getElementById('speedNum').textContent = `${Math.round(avgSpeed)} 人/分`;
+    document.getElementById('fastRate').textContent = `+10人ペース（${Math.round(fastSpeed)}人/分）`;
+    document.getElementById('normalRate').textContent = `平均ペース（${Math.round(avgSpeed)}人/分）`;
+    document.getElementById('slowRate').textContent = `-10人ペース（${Math.round(slowSpeed)}人/分）`;
+
+    document.getElementById('fastTime').textContent = fastArrival;
+    document.getElementById('normalTime').textContent = normalArrival;
+    document.getElementById('slowTime').textContent = slowArrival;
+
+    document.getElementById('fastRemaining').textContent = formatRemaining(fastMinutes);
+    document.getElementById('normalRemaining').textContent = formatRemaining(normalMinutes);
+    document.getElementById('slowRemaining').textContent = formatRemaining(slowMinutes);
+
+    document.getElementById('resultCard').classList.add('show');
+    updateDataPointsInfo();
+  }
+
+  // 初期6行
+  for (let i = 0; i < 6; i++) addRow();
+</script>
+</body>
+</html>
